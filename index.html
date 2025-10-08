@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dissolution Test Simulation</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    #digitalTracker {
+      position: fixed;
+      width: 260px;
+      height: 110px;
+      background: linear-gradient(145deg, #2d3137, #3b4048);
+      border: 2px solid #5a5f67;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      color: #00ff9d;
+      font-family: "Consolas", monospace;
+      padding: 10px 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: opacity 0.4s ease;
+      opacity: 0.95;
+      z-index: 9999;
+    }
+
+    #dragBlank img,
+    #dragSample img {
+      width: 60px !important;
+      height: auto !important;
+      max-width: 60px;
+      max-height: 60px;
+      border-radius: 8px;
+      transition: transform 0.2s ease;
+    }
+
+    #dragBlank img:hover,
+    #dragSample img:hover {
+      transform: scale(1.1);
+    }
+
+    #background {
+      background-image: url('Assets/background.png');
+      background-size: cover;
+      background-position: center;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    #popup, #machinePopup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(145deg, #2d3137, #3b4048);
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+      color: #00ffcc;
+      padding: 20px;
+      width: 70%;
+      max-width: 900px;
+      transition: all 0.3s ease;
+      z-index: 2000;
+    }
+
+    button:active {
+      transform: translateY(2px);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    #machinePopup button {
+      color: #00ff9d;
+      background: linear-gradient(145deg, #1b1d20, #3b4048);
+      border: 2px solid #5a5f67;
+      border-radius: 6px;
+      box-shadow:inset 0 1px 2px rgba(255,255,255,0.9),
+              0 2px 4px rgba(0,0,0,0.15);
+      padding: 8px 16px;
+      margin: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #popup h2, #machinePopup h2 {     
+      color: #00ff9d;
+      font-family: "Consolas", monospace;
+      letter-spacing: 1px;
+      font-weight: 700;
+      font-size: 30px;
+      margin-bottom: 15px;
+    }
+
+    #machinePopup .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 26px;
+      font-weight: bold;
+      color: #00ff9d;
+      cursor: pointer;
+      background: none;
+      border: none;
+      outline: none;
+      transition: color 0.2s;
+    }
+
+    .medicinal-choice, .apparatus-choice {
+      display: inline-block;
+      margin: 10px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .medicinal-choice img, .apparatus-choice img {
+      width: 150px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    .medicinal-choice:hover, .apparatus-choice:hover {
+      transform: scale(1.1);
+    }
+
+    .machine-options button:hover {
+      background: #e0e0e0;
+      transform: scale(1.05);
+    }
+
+    #message {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    #feedback-image {
+      position: absolute;
+      top: 302px;
+      left: 1061px;
+      width: 100px;
+      display: none;
+      z-index: 20;
+    }
+
+    #machinePopupContent {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 60px; /* space between image and buttons */
+      flex-wrap: wrap;
+    }
+
+    #popupOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4); /* slightly dark overlay */
+      display: none;
+      z-index: 998;
+    }
+
+    #machinePopupContent img { /* this is the machine itself, including the borders and all that */
+      background: linear-gradient(#f3f5f6, #cfd4d7);
+      border: 2px solid #9da3a7;
+      border-radius: 12px;
+      box-shadow: inset 0 3px 6px rgba(0,0,0,0.15);
+      width: 400px; 
+      height: auto;
+    }
+
+    #machinePopup img { /*size of the machine */
+      width: 600px;
+      height: auto;
+      margin: 20px 0;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+    }
+
+    #machinePopup.show {
+      transform: scale(1);
+    }
+
+    .machine-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .machine-options button {
+      padding: 14px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 1px solid #bbb;
+      background: #f8f8f8;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .rpm-control {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .rpm-control input {
+      width: 80px;
+      padding: 6px;
+      font-size: 16px;
+    }
+
+    /* Bottom menu bar */
+  .menu-bar {
+    color: #00ff9d;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    text-align: center;
+    cursor: pointer;
+    transition: height 0.3s ease;
+    overflow: hidden;
+    height: 40px; /* collapsed height */
+  }
+
+  .menu-bar.expanded {
+    height: 200px; /* expanded height */
+  }
+
+  .menu-header {
+    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .machine-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 10px;
+  }
+
+  .machine-item {
+    background: #444;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .machine-item:hover {
+    transform: scale(1.1);
+    background: #666;
+  }
+
+  .power-indicator {
+  position: absolute;
+  top: 12px;
+  right: 50px;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, #45ff3b 40%, #1f4d17 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 8px 2px rgba(69,255,59,0.6);
+}
+
+#dragItems {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 25px;
+}
+
+#dragItems img {
+  width: 90px;
+  height: auto;
+  cursor: grab;
+  transition: transform 0.2s ease;
+}
+
+#dragItems img:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
+
+  </style>
+</head>
+<body>
+  <div id="digitalTracker">
+    <div id="trackerLabel">LABORATORY</div>
+    <div id="trackerTimer">TIME: 00:00</div>
+    <div id="trackerIndicator">
+      <span id="led" style="color:#00ff9d;">●</span> ACTIVE
+    </div>
+  </div>
+
+  <div id="background" onclick="checkMachineClick(event)">
+    <div id="popup">
+      <center>
+      <h2>Select Medicinal Form</h2>
+      <div class="power-indicator"></div>
+      <div class="medicinal-choice" onclick="selectForm('capsule')">
+        <img src="Assets/capsule.png" alt="Capsule" />
+        <div>Capsule</div>
+      </div>
+      <div class="medicinal-choice" onclick="selectForm('tablet')">
+        <img src="Assets/tablet.png" alt="Tablet" />
+        <div>Tablet</div>
+      </div>
+      </center>
+    </div>
+    <div id="message"></div>
+    <img id="feedback-image" src="" alt="Feedback" />
+  <div id="machinePopup" style="display: none;">
+    <h2 style="position: relative;">
+      Dissolution Machine
+      <span onclick="closeMachinePopup()" style="
+        position: absolute; 
+        top: 0; 
+        right: 0; 
+        cursor: pointer; 
+        font-weight: bold; 
+        font-size: 20px; 
+        padding: 0 8px;
+      ">&times;</span>
+    </h2>
+
+    <!-- Machine on left, buttons/textbox on right -->
+    <div id="machinePopupContent" style="
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        gap: 50px; 
+        flex-wrap: nowrap;
+    ">
+      <img id="machineImage" src="" alt="Machine" 
+          style="width: 600px; height: auto; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));">
+
+      <div class="machine-options" style="
+          display: flex; 
+          flex-direction: column; 
+          gap: 15px; 
+          background: rgba(255, 255, 255, 0.1);
+          padding: 20px;
+          border-radius: 10px;
+          backdrop-filter: blur(5px);
+      ">
+        <button onclick="fillDissolutionMedium()">Fill with Dissolution Medium</button>
+        <button onclick="placeMedicinalForm()">Place Medicinal Form</button>
+        <div class="rpm-control" style="display:flex; gap:5px; align-items:center;">
+          <input type="number" id="rpmInput" placeholder="RPM" />
+          <button onclick="startMachine()">Start</button>
+          <button onclick="stopMachine()">Stop</button>
+        </div>
+        <button onclick="extractAndFilter()">Extract and Filter</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  </div>
+
+  <script>
+    let chosenForm = '';
+    let isFilled = false;
+    let isPlaced = false;
+    let hasRunCycle = false;
+
+
+    function selectForm(form) {
+      chosenForm = form;
+      console.log("User selected form:", form);
+      document.getElementById('popup').style.display = 'none';
+      showApparatusPopup();
+    }
+
+    function showApparatusPopup() {
+      const popup = document.getElementById('popup');
+      popup.innerHTML = `
+        <center>
+        <h2>Select Apparatus</h2>
+        <div class="apparatus-choice" onclick="selectApparatus('A')">
+          <img src="Assets/Capsule/Machine.png" alt="Apparatus A" />
+          <div>Apparatus A</div>
+        </div>
+        <div class="apparatus-choice" onclick="selectApparatus('B')">
+          <img src="Assets/Tablet/Machine.png" alt="Apparatus B" />
+          <div>Apparatus B</div>
+        </div>
+        </center>
+      `;
+      popup.style.display = 'block';
+    }
+
+    function selectApparatus(apparatus) {
+      let correctApparatus = (chosenForm === 'tablet') ? 'B' : 'A';
+      if (apparatus === correctApparatus) {
+        setBackground('Assets/background_correct.png');
+        setTimeout(() => {
+          proceedToStep3();
+        }, 1000);
+      } else {
+        setBackground('Assets/background_incorrect.png');
+        showExplanationPopup(`Apparatus ${correctApparatus} is the correct choice for a ${chosenForm}. Please try again.`);
+      }
+    }
+
+    function showExplanationPopup(message) {
+      const popup = document.getElementById('popup');
+      popup.innerHTML = `
+        <h2>Incorrect Choice</h2>
+        <p>${message}</p>
+        <button onclick="retryApparatus()">Okay</button>
+      `;
+      popup.style.display = 'block';
+    }
+
+    function closeMachinePopup() {
+  document.getElementById('machinePopup').style.display = 'none';
+    }
+
+
+    function retryApparatus() {
+      setBackground('Assets/background.png');
+      showApparatusPopup();
+    }
+
+    function openMachinePopup() {
+
+      let img = '';
+      if (chosenForm === 'tablet') {
+        img = 'Assets/Tablet/machine.png';
+      } else if (chosenForm === 'capsule') {
+        img = 'Assets/Capsule/machine.png';
+      } else {
+        console.error('Invalid chosenForm value:', chosenForm);
+        return;
+      }
+
+      document.getElementById('machineImage').src = img;
+      document.getElementById('machinePopup').style.display = 'block';
+    }
+
+    function fillDissolutionMedium() {
+      isFilled = true;
+
+      let img = '';
+      if (chosenForm === 'tablet') {
+        img = 'Assets/Tablet/machine_filled.png';
+      } else if (chosenForm === 'capsule') {
+        img = 'Assets/Capsule/machine_filled.png';
+      }
+
+      document.getElementById('machineImage').src = img;
+    }
+
+    function placeMedicinalForm() {
+      if (!isFilled) {
+        showFeedback('Assets/anger.png');
+        return;
+      }
+
+      let img = '';
+      if (chosenForm === 'tablet') {
+        img = 'Assets/Tablet/machine_medicinalform.png';
+        isPlaced = true;
+      } else if (chosenForm === 'capsule') {
+        img = 'Assets/Capsule/machine_medicinalform.png';
+        isPlaced = true;
+      } 
+
+    console.log('Medicinal form placed.');
+    document.getElementById('machineImage').src = img;
+    }
+
+
+    function startMachine() {
+      const rpm = document.getElementById('rpmInput').value;
+      if (!isFilled || !isPlaced || !rpm) {
+        showFeedback('Assets/anger.png');
+        return;
+      }
+
+      let img = '';
+      if (chosenForm === 'tablet') {
+        img = 'Assets/Tablet/machine_activated.gif';
+      } else if (chosenForm === 'capsule') {
+        img = 'Assets/Capsule/machine_medicinalform.png';
+      } else {
+        console.error('Invalid chosenForm value:', chosenForm);
+        return;
+      }
+
+      document.getElementById('machineImage').src = img;
+    }
+
+    function stopMachine() {
+      let img = '';
+      if (chosenForm === 'tablet') {
+        img = isFilled
+          ? 'Assets/Tablet/machine_medicinalform.png'
+          : 'Assets/Tablet/machine_medicinalform.png';
+      } else if (chosenForm === 'capsule') {
+        img = isFilled
+          ? 'Assets/Capsule/machine_medicinalform.png'
+          : 'Assets/Capsule/machine_medicinalform.png';
+      } else {
+        console.error('Invalid chosenForm value:', chosenForm);
+        return;
+      }
+
+      document.getElementById('machineImage').src = img;
+
+      if (isFilled && isPlaced) {
+        hasRunCycle = true;
+        console.log('Machine has completed a run cycle.');
+      }
+    }
+
+    //feedback
+    function showFeedback(imgPath) {
+      const fb = document.getElementById('feedback-image');
+      fb.src = imgPath;
+      fb.style.display = 'block';
+      setTimeout(() => {
+        fb.style.display = 'none';
+      }, 1000);
+    }
+
+    function toggleMachineBar() {
+    const bar = document.getElementById('machineMenuBar');
+    bar.classList.toggle('expanded');
+    }
+
+    // Update your machine bar to include step 6
+    function updateMachineBar() {
+      const machineList = document.getElementById('machineList');
+      machineList.innerHTML = '';
+
+      unlockedMachines.forEach(machine => {
+        const item = document.createElement('div');
+        item.className = 'machine-item';
+        const img = document.createElement('img');
+        img.style.width = '80px';
+        img.style.display = 'block';
+        img.style.margin = '0 auto 5px auto';
+        const label = document.createElement('div');
+        label.style.textAlign = 'center';
+        label.style.fontSize = '14px';
+        label.style.color = 'white';
+
+        if (machine === 'dissolution') {
+          img.src = chosenForm === 'tablet' 
+            ? 'Assets/Tablet/machine.png' 
+            : 'Assets/Capsule/machine.png';
+          label.innerText = 'Dissolution Machine';
+          item.onclick = () => openMachinePopup();
+        } 
+        else if (machine === 'flask') {
+          img.src = chosenForm === 'tablet' 
+            ? 'Assets/volumetricFlask.png' 
+            : 'Assets/volumetricFlask.png';
+          label.innerText = 'Volumetric Flask';
+          item.onclick = () => openStep5Popup();
+        }
+        else if (machine === 'spectro') {
+          img.src = 'Assets/spectro.png';
+          label.innerText = 'Spectrophotometer';
+          item.onclick = () => openStep6Popup();
+        }
+
+        item.appendChild(img);
+        item.appendChild(label);
+        machineList.appendChild(item);
+      });
+    }
+
+
+    let currentStep = 1; // start at step 1 by default, new
+    let unlockedMachines = []; // store all machines that have been unlocked
+
+    function setBackground(path, step = null) {
+      document.getElementById('background').style.backgroundImage = `url('${path}')`;
+
+      if (step !== null) {
+        currentStep = step;
+        unlockMachinesForStep(step); // unlock machines progressively
+        updateMachineBar(); // refresh menu
+      }
+    }
+
+    function unlockMachinesForStep(step) {
+      if (step === 3 && !unlockedMachines.includes('dissolution')) {
+        unlockedMachines.push('dissolution');
+      }
+      if (step === 5 && !unlockedMachines.includes('flask')) {
+        unlockedMachines.push('flask');
+      }
+      if (step === 6 && !unlockedMachines.includes('spectro')) {
+        unlockedMachines.push('spectro');
+      }
+      updateMachineBar();
+    }
+
+    function proceedToStep3() {
+      let bgPath = '';
+      if (chosenForm === 'tablet') {
+        bgPath = 'Assets/Tablet/background.png';
+      } else if (chosenForm === 'capsule') {
+        bgPath = 'Assets/Capsule/background.png';
+      }
+      setBackground(bgPath, 3); // pass step number
+      document.getElementById('popup').style.display = 'none';
+    }
+
+    function extractAndFilter() {
+      if (!hasRunCycle) {
+        showFeedback('Assets/anger.png');
+        return;
+      }
+
+      let gif = '';
+      let nextBg = '';
+
+      if (chosenForm === 'tablet') {
+        gif = 'Assets/Tablet/extract.gif';
+        nextBg = 'Assets/Tablet/background_filter.png';
+      } else if (chosenForm === 'capsule') {
+        gif = 'Assets/Capsule/extract.gif';
+        nextBg = 'Assets/Capsule/background_filter.png';
+      } else {
+        console.error('Invalid chosenForm value:', chosenForm);
+        return;
+      }
+
+      document.getElementById('machineImage').src = gif;
+
+      setTimeout(() => {
+        setBackground(nextBg, 5); // move to step 5
+        closeMachinePopup();
+      }, 2000);
+    }
+
+    // here
+    let currentDropStep = 1;
+
+    function openStep5Popup() {
+      const popup = document.getElementById("machinePopup");
+      popup.style.display = "flex";
+      popup.style.flexDirection = "column";
+      popup.style.alignItems = "center";
+      popup.style.position = "relative";
+
+      popup.innerHTML = `
+        <h2 style="position: relative; text-align:center; margin-bottom: 20px;">
+          Step 5 — Filtrate Transfer & Dilution
+          <span onclick="closeMachinePopup()" style="
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 26px; 
+            padding: 0 10px;
+          ">&times;</span>
+        </h2>
+
+        <div id="machineArea" style="display:flex; align-items:center; justify-content:center; gap:40px;">
+          <img id="machineImage" src="Assets/step6and7.png" alt="Machine"
+              style="width:600px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.4);
+              transition:opacity 0.5s ease; opacity:1;">
+          <div id="dragItems" style="display:flex; flex-direction:column; gap:20px; align-items:flex-start;">
+            <img src="Assets/capsule.png" id="item1" class="draggable" draggable="true" title="Transfer Filtrate">
+            <img src="Assets/star.png" id="item2" class="draggable" draggable="true" title="Dilute Volume">
+            <img src="Assets/tablet.png" id="item3" class="draggable" draggable="true" title="Dissolve USP">
+          </div>
+        </div>
+      `;
+
+      enableDragAndDrop();
+    }
+
+
+    function enableDragAndDrop() {
+      const draggables = document.querySelectorAll(".draggable");
+      const machineImage = document.getElementById("machineImage");
+
+      draggables.forEach(item => {
+        item.addEventListener("dragstart", e => {
+          e.dataTransfer.setData("text/plain", e.target.id);
+        });
+      });
+
+      machineImage.addEventListener("dragover", e => {
+        e.preventDefault();
+      });
+
+      machineImage.addEventListener("drop", e => {
+        e.preventDefault();
+        const itemId = e.dataTransfer.getData("text/plain");
+        handleDrop(itemId);
+      });
+    }
+
+    function handleDrop(itemId) {
+      const machineImage = document.getElementById("machineImage");
+
+      if (currentDropStep === 1 && itemId === "item1") {
+        machineImage.style.opacity = 0;
+        setTimeout(() => {
+          machineImage.src = "Assets/transferFiltrate.gif";
+          machineImage.style.opacity = 1;
+        }, 400);
+        currentDropStep++;
+      } else if (currentDropStep === 2 && itemId === "item2") {
+        machineImage.style.opacity = 0;
+        setTimeout(() => {
+          machineImage.src = "Assets/dilute.gif";
+          machineImage.style.opacity = 1;
+        }, 400);
+        currentDropStep++;
+      } else if (currentDropStep === 3 && itemId === "item3") {
+        machineImage.style.opacity = 0;
+        setTimeout(() => {
+          machineImage.src = "Assets/dissolveUSP.gif";
+          machineImage.style.opacity = 1;
+        }, 400);
+
+        setTimeout(() => {
+          alert("All steps in Step 5 completed!");
+          // Move background to Step 6 scene (if any)
+          setBackground('Assets/background.png', 6);
+          closeMachinePopup();
+        }, 1800);
+
+        currentDropStep++;
+      } else {
+        alert("Please complete the previous step first!");
+      }
+    }    
+
+    function openStep6Popup() {
+      const popup = document.getElementById("machinePopup");
+      popup.style.display = "flex";
+      popup.style.flexDirection = "column";
+      popup.style.alignItems = "center";
+      popup.style.position = "relative";
+
+      popup.innerHTML = `
+        <h2 style="position: relative; text-align:center; margin-bottom: 20px;">
+          Step 6 — Spectrophotometer Operation
+          <span onclick="closeMachinePopup()" style="
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 26px; 
+            padding: 0 10px;
+          ">&times;</span>
+        </h2>
+
+      <div id="machineArea" style="display:flex; align-items:flex-start; justify-content:center; gap:40px;">
+        <img id="machineImage" src="Assets/spectro.png" alt="Spectrophotometer"
+            style="width:600px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.4);
+            transition:opacity 0.5s ease; opacity:1;">
+        
+        <div id="controlsRight" style="display:flex; flex-direction:column; gap:20px; align-items:flex-start;">
+          <!-- Stage 1 -->
+          <div>
+            <input type="number" id="wavelengthInput" placeholder="Enter Wavelength"
+                  style="padding:6px 10px; border-radius:6px; border:1px solid #666; width:150px;">
+            <button onclick="confirmWavelength()" style="padding:8px 14px; border-radius:8px;">Set Wavelength</button>
+          </div>
+
+          <!-- Stage 2 -->
+          <div id="stage2" style="display:none;">
+            <div id="dragBlank" draggable="true"
+                style="display:inline-block; margin-right:10px; cursor:grab;">
+              <img src="Assets/star.png" width="60">
+            </div>
+            <button onclick="setZeroAndRemoveBlank()">Set Zero and Remove Blank</button>
+            <button onclick="removeBlank()">Remove Blank</button>
+          </div>
+
+          <!-- Stage 3 -->
+          <div id="stage3" style="display:none;">
+            <div id="dragSample" draggable="true"
+                style="display:inline-block; margin-right:10px; cursor:grab;">
+              <img src="Assets/star.png" width="60">
+            </div>
+            <button onclick="confirmOK()">OK</button>
+            <span id="resultValue" style="margin-left:10px; font-weight:bold; color:#00ff9d;"></span>
+            <button onclick="removeSample()" style="margin-left:20px;">Remove Sample</button>
+          </div>
+        </div>
+      </div>
+
+      `;
+
+      enableStep6DragDrop();
+      step6CurrentStage = 1;
+      step6WavelengthSet = false;
+      step6BlankPlaced = false;
+      step6SamplePlaced = false;
+    }
+
+    // --- Stage 1: Confirm Wavelength ---
+    function confirmWavelength() {
+      const input = document.getElementById("wavelengthInput").value;
+      const machineImage = document.getElementById("machineImage");
+
+      if (!input) {
+        alert("Please enter a wavelength value!");
+        return;
+      }
+
+      machineImage.style.opacity = 0;
+      setTimeout(() => {
+        machineImage.src = "Assets/setWavelength.png";
+        machineImage.style.opacity = 1;
+      }, 400);
+
+      step6WavelengthSet = true;
+      step6CurrentStage = 2;
+      document.getElementById("stage2").style.display = "block";
+    }
+
+    function enableStep6DragDrop() {
+      const blank = document.getElementById("dragBlank");
+      const sample = document.getElementById("dragSample");
+      const machineImage = document.getElementById("machineImage");
+
+      if (blank) {
+        blank.addEventListener("dragstart", e => e.dataTransfer.setData("item", "blank"));
+      }
+      if (sample) {
+        sample.addEventListener("dragstart", e => e.dataTransfer.setData("item", "sample"));
+      }
+
+      machineImage.addEventListener("dragover", e => e.preventDefault());
+      machineImage.addEventListener("drop", e => {
+        e.preventDefault();
+        const item = e.dataTransfer.getData("item");
+        if (step6CurrentStage === 2 && item === "blank") placeBlank();
+        if (step6CurrentStage === 3 && item === "sample") placeSample();
+      });
+    }
+
+    function placeBlank() {
+      const machineImage = document.getElementById("machineImage");
+      machineImage.style.opacity = 0;
+      setTimeout(() => {
+        machineImage.src = "Assets/placeBlank.gif";
+        machineImage.style.opacity = 1;
+      }, 400);
+      step6BlankPlaced = true;
+    }
+
+    function setZeroAndRemoveBlank() {
+      if (!step6BlankPlaced) {
+        alert("Place the blank first!");
+        return;
+      }
+      const machineImage = document.getElementById("machineImage");
+      machineImage.style.opacity = 0;
+      setTimeout(() => {
+        machineImage.src = "Assets/setZero.gif";
+        machineImage.style.opacity = 1;
+      }, 400);
+
+      setTimeout(() => {
+        machineImage.src = "Assets/removeBlank.gif";
+        step6CurrentStage = 3;
+        document.getElementById("stage3").style.display = "block";
+      }, 1500);
+    }
+
+    function removeBlank() {
+      const machineImage = document.getElementById("machineImage");
+      machineImage.src = "Assets/removeBlank.gif";
+      step6CurrentStage = 3;
+      document.getElementById("stage3").style.display = "block";
+    }
+
+    function placeSample() {
+      const machineImage = document.getElementById("machineImage");
+      machineImage.style.opacity = 0;
+      setTimeout(() => {
+        machineImage.src = "Assets/placeSample.gif";
+        machineImage.style.opacity = 1;
+      }, 400);
+      step6SamplePlaced = true;
+    }
+
+    function confirmOK() {
+      if (!step6SamplePlaced) {
+        alert("Please place the sample first!");
+        return;
+      }
+
+      const machineImage = document.getElementById("machineImage");
+      const resultValue = document.getElementById("resultValue");
+      const randomValue = (Math.random() * 0.2 + 0.7).toFixed(2);
+
+      machineImage.style.opacity = 0;
+
+      resultValue.textContent = randomValue;
+    }
+
+    function removeSample() {
+      const machineImage = document.getElementById("machineImage");
+      machineImage.src = "Assets/removeSample.gif";
+      alert("Step 6 completed!");
+      closeMachinePopup();
+    }
+  </script>
+
+  <!-- Machine Menu Bar -->
+  <div id="machineMenuBar" class="menu-bar" onclick="toggleMachineBar()">
+    <div class="menu-header"> Tools</div>
+    <div id="machineList" class="machine-list"></div>
+  </div>
+
+</body>
+</html>
