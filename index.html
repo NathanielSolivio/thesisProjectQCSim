@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dissolution Test Simulation</title>
   <style>
+    /* css stuff */
     html, body {
       margin: 0;
       padding: 0;
@@ -14,6 +15,7 @@
       font-family: sans-serif;
     }
 
+    /* this was supposed to be a timer but i forgot to add a timer part*/
     #digitalTracker {
       position: fixed;
       width: 260px;
@@ -33,6 +35,7 @@
       z-index: 9999;
     }
 
+    /* for spectro*/
     #dragBlank img,
     #dragSample img {
       width: 60px !important;
@@ -57,6 +60,7 @@
       position: relative;
     }
 
+    /* style for the popup for apparatus, flask and spectro */
     #popup, #machinePopup {
       position: absolute;
       top: 50%;
@@ -114,6 +118,7 @@
       transition: color 0.2s;
     }
 
+    /* read the name */
     .medicinal-choice, .apparatus-choice {
       display: inline-block;
       margin: 10px;
@@ -162,7 +167,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 60px; /* space between image and buttons */
+      gap: 60px; 
       flex-wrap: wrap;
     }
 
@@ -172,12 +177,13 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.4); /* slightly dark overlay */
+      background: rgba(0, 0, 0, 0.4);
       display: none;
       z-index: 998;
     }
 
-    #machinePopupContent img { /* this is the machine itself, including the borders and all that */
+    /* this is the machine itself, including the borders and all that */
+    #machinePopupContent img { 
       background: linear-gradient(#f3f5f6, #cfd4d7);
       border: 2px solid #9da3a7;
       border-radius: 12px;
@@ -186,7 +192,7 @@
       height: auto;
     }
 
-    #machinePopup img { /*size of the machine */
+    #machinePopup img { 
       width: 600px;
       height: auto;
       margin: 20px 0;
@@ -225,7 +231,6 @@
       font-size: 16px;
     }
 
-    /* Bottom menu bar */
   .menu-bar {
     color: #00ff9d;
     position: fixed;
@@ -238,11 +243,11 @@
     cursor: pointer;
     transition: height 0.3s ease;
     overflow: hidden;
-    height: 40px; /* collapsed height */
+    height: 40px; 
   }
 
   .menu-bar.expanded {
-    height: 200px; /* expanded height */
+    height: 200px; 
   }
 
   .menu-header {
@@ -306,6 +311,7 @@
   </style>
 </head>
 <body>
+  <!-- this was SUPPOSED to be a timer :) -->
   <div id="digitalTracker">
     <div id="trackerLabel">LABORATORY</div>
     <div id="trackerTimer">TIME: 00:00</div>
@@ -314,10 +320,11 @@
     </div>
   </div>
 
+  <!-- 1st step: choose your drug sample -->
   <div id="background" onclick="checkMachineClick(event)">
     <div id="popup">
       <center>
-      <h2>Select Medicinal Form</h2>
+      <h2>Select Drug Sample</h2>
       <div class="power-indicator"></div>
       <div class="medicinal-choice" onclick="selectForm('capsule')">
         <img src="Assets/capsule.png" alt="Capsule" />
@@ -331,6 +338,7 @@
     </div>
     <div id="message"></div>
     <img id="feedback-image" src="" alt="Feedback" />
+  <!-- Step 2: Apparatus operation -->  
   <div id="machinePopup" style="display: none;">
     <h2 style="position: relative;">
       Dissolution Machine
@@ -345,7 +353,6 @@
       ">&times;</span>
     </h2>
 
-    <!-- Machine on left, buttons/textbox on right -->
     <div id="machinePopupContent" style="
         display: flex; 
         align-items: center; 
@@ -395,6 +402,7 @@
       showApparatusPopup();
     }
 
+    // pick apparatus based on chosen drug sample
     function showApparatusPopup() {
       const popup = document.getElementById('popup');
       popup.innerHTML = `
@@ -413,6 +421,7 @@
       popup.style.display = 'block';
     }
 
+    //if apparatus selection is wrong
     function selectApparatus(apparatus) {
       let correctApparatus = (chosenForm === 'tablet') ? 'B' : 'A';
       if (apparatus === correctApparatus) {
@@ -426,6 +435,7 @@
       }
     }
 
+    //shows up after the choice of apparatus is wrong
     function showExplanationPopup(message) {
       const popup = document.getElementById('popup');
       popup.innerHTML = `
@@ -436,8 +446,9 @@
       popup.style.display = 'block';
     }
 
+    //why do i even need to explain this
     function closeMachinePopup() {
-  document.getElementById('machinePopup').style.display = 'none';
+      document.getElementById('machinePopup').style.display = 'none';
     }
 
 
@@ -553,7 +564,6 @@
     bar.classList.toggle('expanded');
     }
 
-    // Update your machine bar to include step 6
     function updateMachineBar() {
       const machineList = document.getElementById('machineList');
       machineList.innerHTML = '';
@@ -597,16 +607,16 @@
     }
 
 
-    let currentStep = 1; // start at step 1 by default, new
-    let unlockedMachines = []; // store all machines that have been unlocked
+    let currentStep = 1; 
+    let unlockedMachines = []; 
 
     function setBackground(path, step = null) {
       document.getElementById('background').style.backgroundImage = `url('${path}')`;
 
       if (step !== null) {
         currentStep = step;
-        unlockMachinesForStep(step); // unlock machines progressively
-        updateMachineBar(); // refresh menu
+        unlockMachinesForStep(step); 
+        updateMachineBar(); 
       }
     }
 
@@ -630,7 +640,7 @@
       } else if (chosenForm === 'capsule') {
         bgPath = 'Assets/Capsule/background.png';
       }
-      setBackground(bgPath, 3); // pass step number
+      setBackground(bgPath, 3); 
       document.getElementById('popup').style.display = 'none';
     }
 
@@ -657,12 +667,11 @@
       document.getElementById('machineImage').src = gif;
 
       setTimeout(() => {
-        setBackground(nextBg, 5); // move to step 5
+        setBackground(nextBg, 5); 
         closeMachinePopup();
       }, 2000);
     }
 
-    // here
     let currentDropStep = 1;
 
     function openStep5Popup() {
@@ -826,7 +835,6 @@
       step6SamplePlaced = false;
     }
 
-    // --- Stage 1: Confirm Wavelength ---
     function confirmWavelength() {
       const input = document.getElementById("wavelengthInput").value;
       const machineImage = document.getElementById("machineImage");
@@ -937,7 +945,6 @@
     }
   </script>
 
-  <!-- Machine Menu Bar -->
   <div id="machineMenuBar" class="menu-bar" onclick="toggleMachineBar()">
     <div class="menu-header"> Tools</div>
     <div id="machineList" class="machine-list"></div>
