@@ -494,10 +494,10 @@
 
       let img = '';
       if (chosenForm === 'tablet') {
-        img = 'Assets/Tablet/machine_medicinalform.png';
+        img = 'Assets/Tablet/machine_medicinalform.gif';
         isPlaced = true;
       } else if (chosenForm === 'capsule') {
-        img = 'Assets/Capsule/machine_medicinalform.png';
+        img = 'Assets/Capsule/machine_medicinalform.gif';
         isPlaced = true;
       } 
 
@@ -517,7 +517,7 @@
       if (chosenForm === 'tablet') {
         img = 'Assets/Tablet/machine_activated.gif';
       } else if (chosenForm === 'capsule') {
-        img = 'Assets/Capsule/machine_medicinalform.png';
+        img = 'Assets/Capsule/machine_medicinalform.gif';
       } else {
         console.error('Invalid chosenForm value:', chosenForm);
         return;
@@ -530,12 +530,12 @@
       let img = '';
       if (chosenForm === 'tablet') {
         img = isFilled
-          ? 'Assets/Tablet/machine_medicinalform.png'
-          : 'Assets/Tablet/machine_medicinalform.png';
+          ? 'Assets/Tablet/machine_medicinalform.gif'
+          : 'Assets/Tablet/machine_medicinalform.gif';
       } else if (chosenForm === 'capsule') {
         img = isFilled
-          ? 'Assets/Capsule/machine_medicinalform.png'
-          : 'Assets/Capsule/machine_medicinalform.png';
+          ? 'Assets/Capsule/machine_medicinalform.gif'
+          : 'Assets/Capsule/machine_medicinalform.gif';
       } else {
         console.error('Invalid chosenForm value:', chosenForm);
         return;
@@ -952,5 +952,6 @@
 
 </body>
 </html>
+
 
 
